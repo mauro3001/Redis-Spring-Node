@@ -1,83 +1,50 @@
-const express = require("express");
-const axios = require("axios");
-const { createClient } = require("redis");
-const responseTime = require("response-time");
+const express = require('express'); // Se importa el paquete express
+const { request, response } = require('express');
+const cors = require('cors');
+const redis = require('redis'); // Se importa el paquete redis
+require('dotenv').config(); // Lee el archivo de enviroments ".env"
+
+// Connecting to redis
+const client = redis.createClient({
+  socket: {
+    host: 'redis-server',
+    port: process.env.PORT_REDIS // 6379
+  }
+});
+
+client.on( 'error', err  => {
+  console.log('Redis client Error', err);
+});
+
+
+client.connect();
 
 const app = express();
 
-// Connecting to redis
-const client = createClient({
-  host: "127.0.0.1",
-  port: 6379,
+// Cors 
+app.use( cors() );
+// Lectura y parseo del body
+app.use( express.json() );
+
+// Establecer visitas iniciales
+client.set('students', '');
+
+
+// * ---- Crear estudiante ----
+app.post('/agregar', async ( req, res ) => {
+  const { codigo, nombre, email, carrera, nivel  } = req.body;
+  await client.set('students', codigo, nombre, email, carrera, nivel);
+  res.send('Estudiante registrado');
 });
 
-app.use(responseTime());
-
-// Get all characters
-app.get("/character", async (req, res, next) => {
-  try {
-    // Search Data in Redis
-    const reply = await client.get("character");
-
-    // if exists returns from redis and finish with response
-    if (reply) return res.send(JSON.parse(reply));
-
-    // Fetching Data from Rick and Morty API
-    const response = await axios.get(
-      "https://rickandmortyapi.com/api/character"
-    );
-
-    // Saving the results in Redis. The "EX" and 10, sets an expiration of 10 Seconds
-    const saveResult = await client.set(
-      "character",
-      JSON.stringify(response.data),
-      {
-        EX: 10,
-      }
-    );
-    console.log(saveResult)
-
-    // resond to client
-    res.send(response.data);
-  } catch (error) {
-    res.send(error.message);
-  }
+// * ---- Obtener estudiante ----
+app.get('/listar', async ( req, res ) => {
+  client.get('students', (err, students) => {
+    res.send('Students', students);
+  });
 });
 
-// Get a single character
-app.get("/character/:id", async (req, res, next) => {
-  try {
-    const reply = await client.get(req.params.id);
 
-    if (reply) {
-      console.log("using cached data");
-      return res.send(JSON.parse(reply));
-    }
-
-    const response = await axios.get(
-      "https://rickandmortyapi.com/api/character/" + req.params.id
-    );
-    const saveResult = await client.set(
-      req.params.id,
-      JSON.stringify(response.data),
-      {
-        EX: 15,
-      }
-    );
-
-    console.log("saved data:", saveResult);
-
-    res.send(response.data);
-  } catch (error) {
-    console.log(error);
-    res.send(error.message);
-  }
+app.listen( process.env.PORT, () => {
+    console.log(`aplicacion corriendo en el puerto... ${process.env.PORT}`);
 });
-
-async function main() {
-  await client.connect();
-  app.listen(3000);
-  console.log("server listen on port 3000");
-}
-
-main();
