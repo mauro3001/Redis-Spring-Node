@@ -1,5 +1,5 @@
 # Redis-Spring-Node
--Implementacion del Taller API Redis - Compose
+-Implementacion del Taller API Redis - Compose (NodeRedis)
 
 -Implementación de Redis + Spring Boot, para estudiantes.
 
