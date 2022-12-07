@@ -27,20 +27,20 @@ app.use( cors() );
 app.use( express.json() );
 
 // Establecer visitas iniciales
-client.set('students', '');
+client.set('estudiantes', '');
 
 
 // * ---- Crear estudiante ----
 app.post('/agregar', async ( req, res ) => {
   const { codigo, nombre, email, carrera, nivel  } = req.body;
-  await client.set('students', codigo, nombre, email, carrera, nivel);
-  res.send('Estudiante registrado');
+  await client.set('estudiantes', codigo + nombre + email + carrera + nivel);
+  res.send('El estudiante ha sido registrado');
 });
 
 // * ---- Obtener estudiante ----
 app.get('/listar', async ( req, res ) => {
-  client.get('students', (err, students) => {
-    res.send('Students', students);
+  client.get('estudiantes', (err, estudiantes) => {
+    res.send('estudiantes', estudiantes);
   });
 });
 
