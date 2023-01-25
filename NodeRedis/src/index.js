@@ -1,8 +1,8 @@
-const express = require('express'); // Se importa el paquete express
+const express = require('express'); 
 const { request, response } = require('express');
 const cors = require('cors');
-const redis = require('redis'); // Se importa el paquete redis
-require('dotenv').config(); // Lee el archivo de enviroments ".env"
+const redis = require('redis'); 
+require('dotenv').config(); 
 
 // Connecting to redis
 const client = redis.createClient({
@@ -21,23 +21,22 @@ client.connect();
 
 const app = express();
 
-// Cors 
+
 app.use( cors() );
-// Lectura y parseo del body
+
 app.use( express.json() );
 
-// Establecer visitas iniciales
+
 client.set('estudiantes', '');
 
 
-// * ---- Crear estudiante ----
 app.post('/agregar', async ( req, res ) => {
   const { codigo, nombre, email, carrera, nivel  } = req.body;
   await client.set('estudiantes', codigo + nombre + email + carrera + nivel);
   res.send('El estudiante ha sido registrado');
 });
 
-// * ---- Obtener estudiante ----
+
 app.get('/listar', async ( req, res ) => {
   client.get('estudiantes', (err, estudiantes) => {
     res.send('estudiantes', estudiantes);
